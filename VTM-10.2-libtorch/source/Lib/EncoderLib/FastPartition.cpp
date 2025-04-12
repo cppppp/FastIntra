@@ -144,9 +144,6 @@ void FastPartition::init_luma_feature_maps(int tmp_poc, int w, int h, int qp, in
     {0.045438957475994524, 0.105, 0.19286694101508917, 0.1871056241426612, 0.105, 0.1495313214449017},
     {0.008230452674897129, 0.3175, 0.1037075140984606, 0.2073045267489712, 0.105, 0.105}
   };*/
-
-
-  auto sT = std::chrono::system_clock::now();
   
   //chroma
   torch::nn::MaxPool2d maxpool=torch::nn::MaxPool2d(maxpool_options(2,2));
