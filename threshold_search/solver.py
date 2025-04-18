@@ -34,15 +34,15 @@ class Solver(object):
         self.model_path = config.model_path
         self.gpus = gpus
         self.build_model()
-        self.load_model()  #加载模型参数
+        self.load_model()
 
     def load_model(self):
         def my_load_state_dict(module,state_dict):
             from collections import OrderedDict
-            if 'module.' in list(state_dict.keys())[0]:  # multi-gpu training
+            if 'module.' in list(state_dict.keys())[0]:
                 new_state_dict = OrderedDict()
                 for k, v in state_dict.items():
-                    name = k[7:]  # remove module
+                    name = k[7:]
                     new_state_dict[name] = v
                 module.load_state_dict(new_state_dict, strict = True)
             else:
@@ -52,7 +52,7 @@ class Solver(object):
             my_load_state_dict(module,torch.load(os.path.join(self.model_path, 'module-%d.pkl' % (i))))
             
     def build_model(self):
-        self.res = res1(1) #1表示输入通道数为1
+        self.res = res1(1)
         
         self.subnet = []
         self.subnet.append(subnet2(6))
@@ -92,13 +92,11 @@ class Solver(object):
         for j in range(images['image'].size(0)):
 
             last_best_rd = 1000000000000000
-            #上一轮的最低rd
             for k in range(6):
                 if soft[j][k]>last_thres[k] and images['gt'][j][k]< last_best_rd and images['gt'][j][k]>0.00001:
                     last_best_rd = images['gt'][j][k]
             
             new_best_rd = 1000000000000000
-            #上一轮的最低rd
             for k in range(6):
                 if soft[j][k]>new_thres[k] and images['gt'][j][k]< new_best_rd and images['gt'][j][k]>0.00001:
                     new_best_rd = images['gt'][j][k]
@@ -107,27 +105,21 @@ class Solver(object):
                 if new_thres[k] > last_thres[k]:
                     if images['gt'][j][k]==0:
                         continue
-                    #找到被取消的划分方式，观察它们的影响
                     if soft[j][k]>last_thres[k] and soft[j][k]<new_thres[k]:
                         delta_rd = new_best_rd - images['gt'][j][k]
                         if delta_rd < 0:
-                            delta_rd = 0 #没有影响
+                            delta_rd = 0
                             
                         rdtcost[k] += (rdo_gamma*delta_rd/100 - self.rdo_param * images['gt'][j][6+k])
-                        #rdtcost[k] += delta_rd/100
-                        #rdtcost[k+6] -= images['gt'][j][6+k]
 
                 elif new_thres[k] < last_thres[k]:
                     if images['gt'][j][k]==0:
                         continue
-                    #找到增加的划分方式，观察它们的影响
                     if soft[j][k]>new_thres[k] and soft[j][k]<last_thres[k]:
                         delta_rd = images['gt'][j][k] - last_best_rd
                         if delta_rd > 0:
-                            delta_rd = 0 #没有影响
+                            delta_rd = 0
                         rdtcost[k] += (rdo_gamma*delta_rd/100 + self.rdo_param * images['gt'][j][6+k])
-                        #rdtcost[k] += delta_rd/100
-                        #rdtcost[k+6] += images['gt'][j][6+k]
         
         return [rdtcost[k] for k in range(12)]
 
@@ -182,7 +174,6 @@ class Solver(object):
                     elif new_thres[k] >= last_thres[k] and rdtcost[k] > 0:
                         current_range[k][1]=new_thres[k]
                     elif new_thres[k] < last_thres[k] and rdtcost[k] < 0:
-                        #封闭last_thres那一侧
                         current_range[k][1] = last_thres[k]
                         if current_range[k][0] == -0.1:
                             new_thres[k] = new_thres[k] - 0.025
