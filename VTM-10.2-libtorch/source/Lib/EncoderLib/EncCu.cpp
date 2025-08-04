@@ -869,19 +869,15 @@ void EncCu::xCompressCU( CodingStructure*& tempCS, CodingStructure*& bestCS, Par
     for(i=0;i<6;i++){
       if(will_test_mode[i]==1 && 
         reuse_record[(int)compBegin][(uiTPelY%128)/4][(uiLPelX%128)/4][(int)tempCS->area.lheight()/4][(int)tempCS->area.lwidth()/4][temp][i]==1){
-        if(temp==1){cuECtx.set(2,false);}
-        if(temp==2){
-          cuECtx.set(0,false);
-          //cuECtx.set(7, true);
-        }
-        if(temp==3){
-          cuECtx.set(1,false);
-          //cuECtx.set(8, true);
-        }
         break;
       }
     }
-    if(i!=6)continue;
+    if(i!=6){
+      if(temp==1)cuECtx.set(2,false);
+      if(temp==2)cuECtx.set(0,false);
+      if(temp==3)cuECtx.set(1,false);
+      continue;
+    }
   }
 
 #if GRADIENT_BASED
